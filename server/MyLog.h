@@ -1,6 +1,6 @@
 #pragma once
 #include "function.h"
-#include "MyDb.h"
+#include "MySql_wrapper.h"
 #define LOG(user, operation){MyLog log;log.insert(user, operation);}
 
 class MyLog

@@ -1,30 +1,23 @@
 #pragma once
+#include <memory>
 #include "function.h"
 #include "workQue.h"
-#include "MyDb.h"
+#include "MySql_wrapper.h"
 #include "MyLog.h"
 
 void *doingTask(void *arg);
 int childHandle(const Task &task);
+
+
 class Factory
 {
 public:
-    Factory() {
-        threadNum = THREADNUM;
-        cond = PTHREAD_COND_INITIALIZER;
-        startFlag = false;
-    }
-    void startFactory() {
-        if (!startFlag) {
-            cout << "server is running ..." << endl;
-            for (int i = 0; i < threadNum; i++) {
-                pthread_create(&threads[i], NULL, doingTask, this);
-            }
-            sleep(1);
-            startFlag = true;
-        }
-    }
+    Factory();
+    void startFactory();
+    WorkQue getWorkQue();
+    pthread_cond_t getCond();
 
+private:
     WorkQue que;
     int threadNum;
     pthread_t threads[THREADNUM];
@@ -33,15 +26,16 @@ public:
 };
 
 void *doingTask(void *arg) {
-    Factory *f = (Factory *)arg;
+    Factory *f = reinterpret_cast<Factory*> (arg);
     while (1) {
-        pthread_mutex_lock(&f->que.mutex);
-        while (0 == f->que.size()) {
-            pthread_cond_wait(&f->cond, &f->que.mutex);
+        
+        pthread_mutex_lock(&f->getWorkQue().getMutex());
+        while (0 == f->getWorkQue().size()) {
+            pthread_cond_wait(&f->getCond(), &f->getWorkQue().getMutex());
         }
-        Task task = f->que.getTask();
+        Task task = f->getWorkQue().getTask();
         childHandle(task);
-        pthread_mutex_unlock(&f->que.mutex);
+        pthread_mutex_unlock(&f->getWorkQue().getMutex());
     }
 }
 
@@ -58,18 +52,18 @@ int childHandle(const Task &task)
     string res;
     off_t filesize;
     //分析任务包的命令
-    int sockfd = task.fd;
-    stringstream ss(task.orders);
-    cout << "ChildHandle:" << task.orders << endl;
+    int sockfd = task.getFd();
+    stringstream ss(task.getOrders());
+    cout << "ChildHandle:" << task.getOrders() << endl;
     string order, name, order2; //order代表命令，name代表跟在name后面的文件名，order2代表补充命令（可为空）
     ss >> order >> name >> order2;
     string filename(name);
     const char *FILENAME = filename.c_str();
 
-    string username = task.username;
+    string username = task.getUsername();
     cout << "username:" << username << endl;
 
-    int Dir = task.Dir;
+    int Dir = task.getDir();
     cout << "Dir:" << Dir << endl;
     LOG(username, task.orders);
     /*******************************puts 文件内容*******************************/

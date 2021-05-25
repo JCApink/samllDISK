@@ -1,37 +1,17 @@
-#pragma once
-#include <string>
-#include <mysql/mysql.h>
-#include <iostream>
-using namespace std;
+#include "MySql_wrapper.h"
 
-class MyDb
-{
-public:
-    MyDb();
-    ~MyDb();
-    bool initDB(string host, string user, string pwd, string db_name, int port);
-    bool exeSQL(string sql);
-    bool select_one_SQL(std::string sql, string &str);
-    bool select_many_SQL(std::string sql, string &str);
-private:
-    MYSQL *mysql;
-    MYSQL_RES *result;
-    MYSQL_ROW row;
-};
+
 
 MyDb::MyDb() {
     mysql = mysql_init(NULL);
-
     if (!mysql) {
         cout << "Error:" << mysql_error(mysql);
         exit(1);
     }
 }
 
-MyDb::~MyDb()
-{
-    if (mysql)
-    {
+MyDb::~MyDb() {
+    if (mysql){
         mysql_close(mysql);
     }
 }

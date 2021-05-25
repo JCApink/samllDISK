@@ -1,18 +1,6 @@
 #pragma once
 #include "function.h"
-class Task
-{
-public:
-    Task(int fd, string orders, string username, int Dir)
-    :fd(fd), orders(orders), username(username), Dir(Dir)
-    {
-    }
-    
-    int fd; //客户端socket
-    string orders; //客户端发送来的命令
-    string username; //客户端登陆用户名
-    int Dir; //用户所在目录号
-};
+#include "Task.h"
 
 class WorkQue {
 public:
@@ -32,6 +20,12 @@ public:
         deq.pop_front();
         return ans;
     }
+
+    pthread_mutex_t getMutex() {
+        return mutex;
+    }
+
+private:
     pthread_mutex_t mutex; //多线程对任务队列的互斥锁
     deque<Task> deq; //存放accept 接收的 fd，
 };
